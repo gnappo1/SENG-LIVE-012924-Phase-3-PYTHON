@@ -27,12 +27,14 @@ def measure_performance(func):
 def make_list1():
     '''Range'''
     my_list = list(range(100000))
+    return my_list
 
 
 @measure_performance
 def make_list2():
     '''List comprehension'''
     my_list = [l for l in range(100000)]
+    return my_list
 
 
 @measure_performance
@@ -41,6 +43,7 @@ def make_list3():
     my_list = []
     for item in range(100000):
         my_list.append(item)
+    return my_list
 
 
 @measure_performance
@@ -49,10 +52,11 @@ def make_list4():
     my_list = []
     for item in range(100000):
         my_list = my_list + [item]
+    return my_list
 
-
-print(make_list1())
-print(make_list2())
-print(make_list3())
-print(make_list4())
-print("done")
+if __name__ == '__main__':
+    print(make_list1())
+    print(make_list2())
+    print(make_list3())
+    print(make_list4())
+    print("done")
