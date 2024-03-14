@@ -4,32 +4,25 @@ from lib.pet import Pet
 from lib.owner import Owner
 
 
-pat = Owner(
-    "Pat",
-    "Jones",
-)
-rose = Owner(
-    "Rose",
-    "Smith",
-)
+# pat = Owner(
+#     "Pat",
+#     "Jones",
+# )
+# rose = Owner(
+#     "Rose",
+#     "Smith",
+# )
+# joe = Owner("Joe", "Jones")
+# theresa = Owner("Theresa", "Jones")
 
-taco = Pet(
-    "Taco",
-    "Cat",
-)
-fido = Pet(
-    "Fido",
-    "Dog",
-)
-princess = Pet("Princess", "Fish")
-
-joe = Owner("Joe", "Jones")
-theresa = Owner("Theresa", "Jones")
+# taco = Pet("Taco", "Cat", pat)
+# fido = Pet("Fido", "Dog", rose)
+# princess = Pet("Princess", "Fish", theresa)
 
 
-from lib.appointment import *
-from lib.doctor import *
-from lib.patient import *
+# from lib.appointment import *
+# from lib.doctor import *
+# from lib.patient import *
 
 # jimmy = Patient("Jimmy")
 # patty = Patient("Patty")
