@@ -1,3 +1,8 @@
+DROP TABLE IF EXISTS owners;
+DROP TABLE IF EXISTS dogs;
+DROP TABLE IF EXISTS handlers;
+DROP TABLE IF EXISTS appointments;
+
 CREATE TABLE IF NOT EXISTS owners(
     id INTEGER PRIMARY KEY,
     name TEXT,
@@ -13,7 +18,7 @@ CREATE TABLE IF NOT EXISTS dogs(
     age INTEGER,
     owner_id INTEGER,
     favorite_treats TEXT,
-    image_url TEXT
+    image_url TEXT,
     FOREIGN KEY (owner_id) REFERENCES owners(id)
 );
 
