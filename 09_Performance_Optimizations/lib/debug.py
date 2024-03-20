@@ -6,9 +6,9 @@ from classes.patient import Patient
 from classes.appointment import Appointment
 
 def setup_db():
+    Appointment.drop_table()
     Doctor.drop_table()
     Patient.drop_table()
-    Appointment.drop_table()
 
     Doctor.create_table()
     Patient.create_table()

@@ -1,6 +1,5 @@
-from lib.classes.__init__ import CURSOR, CONN
+from classes.__init__ import CURSOR, CONN
 import re
-
 
 class Patient:
     all = {}
@@ -60,20 +59,30 @@ class Patient:
     #! Association Methods
 
     def appointments(self):
-        CURSOR.execute(
-            """
-            SELECT * FROM appointments
-            WHERE patient_id = ?
-        """,
-            (self.id,),
-        )
-        rows = CONN.fetchall()
-        return [
-            Appointment(row[1], row[2], row[3], row[4], row[5], row[0]) for row in rows
-        ]
+        from classes.appointment import Appointment
+
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    SELECT * FROM appointments
+                    WHERE patient_id = ?
+                    """,
+                    (self.id,),
+                )
+                rows = CURSOR.fetchall()
+                return [
+                    Appointment(row[1], row[2], row[3], row[4], row[5], row[0]) for row in rows
+                ]
+        except Exception as e:
+            print("Error fetching appointments:", e)
 
     def doctors(self):
-        return list({appt.doctor for appt in self.appointments()})
+        try:
+            with CONN:
+                return list({appt.doctor for appt in self.appointments()})
+        except Exception as e:
+            print("Error fetching doctors:", e)
 
     #! Helper Methods
 
@@ -81,128 +90,191 @@ class Patient:
 
     @classmethod
     def create_table(cls):
-        CURSOR.execute(
-            """
-            CREATE TABLE IF NOT EXISTS patients (
-                id INTEGER PRIMARY KEY,
-                full_name TEXT,
-                email TEXT,
-                phone_number TEXT
-            );
-        """
-        )
-        CONN.commit()
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS patients (
+                        id INTEGER PRIMARY KEY,
+                        full_name TEXT,
+                        email TEXT,
+                        phone_number TEXT
+                    );
+                    """
+                )
+        except Exception as e:
+            print("Error creating table:", e)
 
     @classmethod
     def drop_table(cls):
-        CURSOR.execute(
-            """
-            DROP TABLE IF EXISTS patients;
-        """
-        )
-        CONN.commit()
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    DROP TABLE IF EXISTS patients;
+                    """
+                )
+        except Exception as e:
+            print("Error dropping table:", e)
 
     @classmethod
     def create(cls, full_name, email, phone):
-        # Initialize a new obj with the info provided
-        new_doctor = cls(full_name, email, phone)
-        # save the obj to make sure it's in the db
-        new_doctor.save()
-        return new_doctor
+        try:
+            with CONN:
+                # Initialize a new obj with the info provided
+                new_patient = cls(full_name, email, phone)
+                # save the obj to make sure it's in the db
+                new_patient.save()
+                return new_patient
+        except Exception as e:
+            print("Error creating patient:", e)
 
     @classmethod
     def new_from_db(cls):
-        CURSOR.execute(
-            """
-            SELECT * FROM patients
-            ORDER BY id DESC
-            LIMIT 1;
-        """
-        )
-        row = CURSOR.fetchone()
-        return cls(row[1], row[2], row[3], row[0])
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    SELECT * FROM patients
+                    ORDER BY id DESC
+                    LIMIT 1;
+                    """
+                )
+                row = CURSOR.fetchone()
+                return cls(row[1], row[2], row[3], row[0]) if row else None
+        except Exception as e:
+            print("Error fetching patient from db:", e)
 
     @classmethod
     def get_all(cls):
-        CURSOR.execute(
-            """
-                SELECT * FROM patients; 
-            """
-        )
-        rows = CURSOR.fetchall()
-        return [cls(row[1], row[2], row[3], row[0]) for row in rows]
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    SELECT * FROM patients;
+                    """
+                )
+                rows = CURSOR.fetchall()
+                return [cls(row[1], row[2], row[3], row[0]) for row in rows]
+        except Exception as e:
+            print("Error fetching all patients:", e)
 
     @classmethod
     def find_by_name(cls, name):
-        CURSOR.execute(
-            """
-            SELECT * FROM patients
-            WHERE full_name is ?;
-        """,
-            (name,),
-        )
-        row = CURSOR.fetchone()
-        return cls(row[1], row[2], row[3], row[0]) if row else None
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    SELECT * FROM patients
+                    WHERE full_name is ?;
+                    """,
+                    (name,),
+                )
+                row = CURSOR.fetchone()
+                return cls(row[1], row[2], row[3], row[0]) if row else None
+        except Exception as e:
+            print("Error finding patient by name:", e)
 
     @classmethod
     def find_by_id(cls, id):
-        CURSOR.execute(
-            """
-            SELECT * FROM patients
-            WHERE id is ?;
-        """,
-            (id,),
-        )
-        row = CURSOR.fetchone()
-        return cls(row[1], row[2], row[3], row[0]) if row else None
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    SELECT * FROM patients
+                    WHERE id is ?;
+                    """,
+                    (id,),
+                )
+                row = CURSOR.fetchone()
+                return cls(row[1], row[2], row[3], row[0]) if row else None
+        except Exception as e:
+            print("Error finding patient by ID:", e)
+
+    @classmethod
+    def find_by(cls, attr, val):
+        try:
+            with CONN:
+                CURSOR.execute(
+                    f"""
+                    SELECT * FROM patients
+                    WHERE {attr} is ?;
+                    """,
+                    (val,),
+                )
+                row = CURSOR.fetchone()
+                return cls(row[1], row[2], row[3], row[0]) if row else None
+        except Exception as e:
+            print("Error finding patient by attribute:", e)
 
     @classmethod
     def find_or_create_by(cls, full_name, email, phone):
-        return cls.find_by_name(full_name) or cls.create(full_name, email, phone)
+        try:
+            with CONN:
+                return cls.find_by_name(full_name) or cls.create(full_name, email, phone)
+        except Exception as e:
+            print("Error finding or creating patient:", e)
 
     #! Utility ORM Instance Methods
 
     def save(self):
-        # self is only instantiated so it has no id
-        CURSOR.execute(
-            """
-            INSERT INTO patients (full_name, email, phone_number)
-            VALUES (?, ?, ?);
-        """,
-            (self.full_name, self.email, self.phone),
-        )
-        CONN.commit()
-        self.id = CURSOR.lastrowid
-        type(self).all[self.id] = self
-        return self
+        try:
+            with CONN:
+                # self is only instantiated so it has no id
+                CURSOR.execute(
+                    """
+                    INSERT INTO patients (full_name, email, phone_number)
+                    VALUES (?, ?, ?);
+                    """,
+                    (self.full_name, self.email, self.phone),
+                )
+                self.id = CURSOR.lastrowid
+                type(self).all[self.id] = self
+                return self
+        except Exception as e:
+            print("Error saving patient:", e)
 
     def update(self):
-        CURSOR.execute(
-            """
-            UPDATE patients
-            SET full_name = ?, email = ?, phone_number = ?
-            WHERE id = ?
-        """,
-            (self.full_name, self.email, self.phone, self.id),
-        )
-        CONN.commit()
-        type(self).all[self] = self
-        return self
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    UPDATE patients
+                    SET full_name = ?, email = ?, phone_number = ?
+                    WHERE id = ?
+                    """,
+                    (self.full_name, self.email, self.phone, self.id),
+                )
+                CONN.commit()
+                type(self).all[self] = self
+                return self
+        except Exception as e:
+            print("Error updating patient:", e)
 
     def delete(self):
-        CURSOR.execute(
-            """
-            DELETE FROM patients
-            WHERE id = ?
-        """,
-            (self.id,),
-        )
-        CONN.commit()
-        #! Remove memoized object
-        del type(self).all[self.id]
-        #! Nullify id
-        self.id = None
-        return self
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    DELETE FROM patients
+                    WHERE id = ?
+                    """,
+                    (self.id,),
+                )
+                CONN.commit()
+                #! Remove memoized object
+                del type(self).all[self.id]
+                #! Nullify id
+                self.id = None
+                return self
+        except Exception as e:
+            print("Error deleting patient:", e)
 
+    #! Exercises
+    
+    def total_appointments_for_patient(self):
+        pass
 
-from lib.classes.appointment import Appointment
+    @classmethod
+    def all_minors_sorted_by_age_ascending(cls):
+        pass

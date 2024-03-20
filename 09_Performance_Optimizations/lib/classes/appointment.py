@@ -1,4 +1,4 @@
-from lib.classes.__init__ import CURSOR, CONN
+from classes.__init__ import CURSOR, CONN
 import re
 from datetime import datetime
 
@@ -30,6 +30,7 @@ class Appointment:
 
     @doctor_id.setter
     def doctor_id(self, doctor_id):
+        from classes.doctor import Doctor
         if not isinstance(doctor_id, int):
             raise TypeError("Doctor_id must be an integer")
         elif doctor_id < 1 or not Doctor.find_by_id(doctor_id):
@@ -98,6 +99,7 @@ class Appointment:
     #! Association Methods
 
     def doctor(self):
+        from classes.doctor import Doctor
         return Doctor.find_by_id(self.doctor_id) if self.doctor_id else None
 
     def patient(self):
@@ -121,143 +123,171 @@ class Appointment:
     #! Utility ORM Class Methods
     @classmethod
     def create_table(cls):
-        CURSOR.execute(
-            """
-            CREATE TABLE IF NOT EXISTS appointments (
-                id INTEGER PRIMARY KEY,
-                date TEXT,
-                time TEXT,
-                description TEXT,
-                doctor_id INTEGER,
-                patient_id INTEGER,
-                FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
-                FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
-            );
-        """
-        )
-        CONN.commit()
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS appointments (
+                        id INTEGER PRIMARY KEY,
+                        date TEXT,
+                        time TEXT,
+                        description TEXT,
+                        doctor_id INTEGER,
+                        patient_id INTEGER
+                    );
+                """
+                )
+        except Exception as e:
+            print("Error creating table:", e)
 
     @classmethod
     def drop_table(cls):
-        CURSOR.execute(
-            """
-            DROP TABLE IF EXISTS appointments;
-        """
-        )
-        CONN.commit()
+        try:
+            with CONN:
+                CURSOR.execute(
+                    """
+                    DROP TABLE IF EXISTS appointments;
+                """
+                )
+        except Exception as e:
+            print("Error dropping table:", e)
 
     @classmethod
     def create(cls, date, time, description, doctor_id, patient_id):
         # Initialize a new obj with the info provided
-        new_appt = cls(date, time, description, doctor_id, patient_id)
-        # save the obj to make sure it's in the db
-        new_appt.save()
-        return new_appt
+        try:
+            with CONN:
+                new_appt = cls(date, time, description, doctor_id, patient_id)
+                # save the obj to make sure it's in the db
+                new_appt.save()
+                return new_appt
+        except Exception as e:
+            print("Error creating doctor:", e)
 
     @classmethod
-    def new_from_db(cls):
-        CURSOR.execute(
-            """
-            SELECT * FROM appointments
-            ORDER BY id DESC
-            LIMIT 1;
-        """
-        )
-        row = CURSOR.fetchone()
-        appt = cls(row[1], row[2], row[3], row[4], row[5], row[0])
-        cls.all[appt.id] = appt
-        return appt
+    def new_from_db(cls, row):
+        try:
+            appt = cls(row[1], row[2], row[3], row[4], row[5], row[0])
+            cls.all[appt.id] = appt
+            return appt
+        except Exception as e:
+            print("Error creating appointment from database:", e)
 
     @classmethod
     def get_all(cls):
-        CURSOR.execute(
-            """
-            SELECT * FROM appointments; 
-        """
-        )
-        rows = CURSOR.fetchall()
-        return [cls(row[1], row[2], row[3], row[4], row[5], row[0]) for row in rows]
+        try:
+            CURSOR.execute(
+                """
+                SELECT * FROM appointments; 
+                """
+            )
+            rows = CURSOR.fetchall()
+            return [cls(row[1], row[2], row[3], row[4], row[5], row[0]) for row in rows]
+        except Exception as e:
+            print("Error getting all appointments:", e)
 
     @classmethod
     def find_by_date_and_time(cls, date, time):
-        CURSOR.execute(
-            """
-            SELECT * FROM appointments
-            WHERE date is ? AND time is ?;
-        """,
-            (date, time),
-        )
-        row = CURSOR.fetchone()
-        return cls(row[1], row[2], row[3], row[4], row[5], row[0]) if row else None
+        try:
+            CURSOR.execute(
+                """
+                SELECT * FROM appointments
+                WHERE date is ? AND time is ?;
+                """,
+                (date, time),
+            )
+            row = CURSOR.fetchone()
+            return cls(row[1], row[2], row[3], row[4], row[5], row[0]) if row else None
+        except Exception as e:
+            print("Error finding appointment by date and time:", e)
 
     @classmethod
     def find_by_id(cls, id):
-        CURSOR.execute(
-            """
-            SELECT * FROM appointments
-            WHERE id is ?;
-        """,
-            (id,),
-        )
-        row = CURSOR.fetchone()
-        return cls(row[1], row[2], row[3], row[4], row[5], row[0]) if row else None
+        try:
+            CURSOR.execute(
+                """
+                SELECT * FROM appointments
+                WHERE id is ?;
+                """,
+                (id,),
+            )
+            row = CURSOR.fetchone()
+            return cls(row[1], row[2], row[3], row[4], row[5], row[0]) if row else None
+        except Exception as e:
+            print("Error finding appointment by ID:", e)
 
     @classmethod
     def find_or_create_by(cls, date, time, description, doctor_id, patient_id):
-        return cls.find_by_date_and_time(date, time) or cls.create(
-            date, time, description, doctor_id, patient_id
-        )
+        try:
+            return cls.find_by_date_and_time(date, time) or cls.create(
+                date, time, description, doctor_id, patient_id
+            )
+        except Exception as e:
+            print("Error finding or creating appointment:", e)
 
     #! Utility ORM Instance Methods
     def update(self):
-        CURSOR.execute(
-            """
-            UPDATE appointments
-            SET date = ?, time = ?, description = ?, doctor_id = ?, patient_id = ?
-            WHERE id = ?
-        """,
-            (
-                self.date,
-                self.time,
-                self.description,
-                self.doctor_id,
-                self.patient_id,
-                self.id,
-            ),
-        )
-        CONN.commit()
-        type(self).all[self.id] = self
-        return self
+        try:
+            CURSOR.execute(
+                """
+                UPDATE appointments
+                SET date = ?, time = ?, description = ?, doctor_id = ?, patient_id = ?
+                WHERE id = ?
+                """,
+                (
+                    self.date,
+                    self.time,
+                    self.description,
+                    self.doctor_id,
+                    self.patient_id,
+                    self.id,
+                ),
+            )
+            CONN.commit()
+            type(self).all[self.id] = self
+            return self
+        except Exception as e:
+            print("Error updating appointment:", e)
 
     def save(self):
-        # self is only instantiated so it has no id
-        CURSOR.execute(
-            """
-            INSERT INTO appointments (date, time, description, doctor_id, patient_id)
-            VALUES (?, ?, ?, ?, ?);
-        """,
-            (self.date, self.time, self.description, self.doctor_id, self.patient_id),
-        )
-        CONN.commit()
-        self.id = CURSOR.lastrowid
-        type(self).all[self.id] = self
-        return self
+        try:
+            CURSOR.execute(
+                """
+                INSERT INTO appointments (date, time, description, doctor_id, patient_id)
+                VALUES (?, ?, ?, ?, ?);
+                """,
+                (
+                    self.date,
+                    self.time,
+                    self.description,
+                    self.doctor_id,
+                    self.patient_id,
+                ),
+            )
+            CONN.commit()
+            self.id = CURSOR.lastrowid
+            type(self).all[self.id] = self
+            return self
+        except Exception as e:
+            print("Error saving appointment:", e)
 
     def delete(self):
-        CURSOR.execute(
-            """
-            DELETE FROM appointments
-            WHERE id = ?;
-        """,
-            (self.id,),
-        )
-        CONN.commit()
-        #! Remove memoized object
-        del type(self).all[self.id]
-        #! Nullify id
-        self.id = None
-        return self
+        try:
+            CURSOR.execute(
+                """
+                DELETE FROM appointments
+                WHERE id = ?;
+                """,
+                (self.id,),
+            )
+            CONN.commit()
+            #! Remove memoized object
+            del type(self).all[self.id]
+            #! Nullify id
+            self.id = None
+            return self
+        except Exception as e:
+            print("Error deleting appointment:", e)
 
 
-from lib.classes.doctor import Doctor
-from lib.classes.patient import Patient
+from classes.patient import Patient
