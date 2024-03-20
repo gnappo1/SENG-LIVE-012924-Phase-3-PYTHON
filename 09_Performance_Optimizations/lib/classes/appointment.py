@@ -228,22 +228,22 @@ class Appointment:
     #! Utility ORM Instance Methods
     def update(self):
         try:
-            CURSOR.execute(
-                """
-                UPDATE appointments
-                SET date = ?, time = ?, description = ?, doctor_id = ?, patient_id = ?
-                WHERE id = ?
-                """,
-                (
-                    self.date,
-                    self.time,
-                    self.description,
-                    self.doctor_id,
-                    self.patient_id,
-                    self.id,
-                ),
-            )
-            CONN.commit()
+            with CONN:
+                CURSOR.execute(
+                    """
+                    UPDATE appointments
+                    SET date = ?, time = ?, description = ?, doctor_id = ?, patient_id = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        self.date,
+                        self.time,
+                        self.description,
+                        self.doctor_id,
+                        self.patient_id,
+                        self.id,
+                    ),
+                )
             type(self).all[self.id] = self
             return self
         except Exception as e:
@@ -251,40 +251,38 @@ class Appointment:
 
     def save(self):
         try:
-            CURSOR.execute(
-                """
-                INSERT INTO appointments (date, time, description, doctor_id, patient_id)
-                VALUES (?, ?, ?, ?, ?);
-                """,
-                (
-                    self.date,
-                    self.time,
-                    self.description,
-                    self.doctor_id,
-                    self.patient_id,
-                ),
-            )
-            CONN.commit()
-            self.id = CURSOR.lastrowid
-            type(self).all[self.id] = self
+            with CONN:
+                CURSOR.execute(
+                    """
+                    INSERT INTO appointments (date, time, description, doctor_id, patient_id)
+                    VALUES (?, ?, ?, ?, ?);
+                    """,
+                    (
+                        self.date,
+                        self.time,
+                        self.description,
+                        self.doctor_id,
+                        self.patient_id,
+                    ),
+                )
+                self.id = CURSOR.lastrowid
+                type(self).all[self.id] = self
             return self
         except Exception as e:
             print("Error saving appointment:", e)
 
     def delete(self):
         try:
-            CURSOR.execute(
-                """
-                DELETE FROM appointments
-                WHERE id = ?;
-                """,
-                (self.id,),
-            )
-            CONN.commit()
-            #! Remove memoized object
-            del type(self).all[self.id]
-            #! Nullify id
-            self.id = None
+            with CONN:
+                CURSOR.execute(
+                    """
+                    DELETE FROM appointments
+                    WHERE id = ?;
+                    """,
+                    (self.id,),
+                )
+                del type(self).all[self.id]
+                self.id = None
             return self
         except Exception as e:
             print("Error deleting appointment:", e)
