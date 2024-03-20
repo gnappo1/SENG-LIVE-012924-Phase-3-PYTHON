@@ -1,6 +1,6 @@
 from classes.__init__ import CURSOR, CONN
 import re
-
+from sqlite3 import IntegrityError
 class Doctor:
     all = {}
 
@@ -76,9 +76,17 @@ class Doctor:
             print("Error fetching appointments:", e)
 
     def patients(self):
+        from classes.patient import Patient
+
         try:
             with CONN:
-                return list({appt.patient for appt in self.appointments()})
+                # return list({appt.patient for appt in self.appointments()})
+                CURSOR.execute("""
+                    SELECT DISTINCT patient_id FROM appointments
+                    WHERE doctor_id IS ?
+                """, (self.id,))
+                rows = CURSOR.fetchall()
+                return [Patient.find_by("id", row[0]) for row in rows]
         except Exception as e:
             print("Error fetching patients:", e)
 
@@ -90,14 +98,17 @@ class Doctor:
     def create_table(cls):
         try:
             with CONN:
-                CURSOR.execute(
+                CURSOR.executescript(
                     """
+                    BEGIN;
                     CREATE TABLE IF NOT EXISTS doctors (
                         id INTEGER PRIMARY KEY,
-                        full_name TEXT,
-                        phone_number TEXT,
+                        full_name TEXT NOT NULL,
+                        phone_number TEXT UNIQUE,
                         specialty TEXT
                     );
+                    CREATE INDEX idx_full_name ON doctors (full_name);
+                    COMMIT;
                     """
                 )
         except Exception as e:
@@ -126,18 +137,11 @@ class Doctor:
             print("Error creating doctor:", e)
 
     @classmethod
-    def new_from_db(cls):
+    def new_from_db(cls, row):
         try:
-            with CONN:
-                CURSOR.execute(
-                    """
-                    SELECT * FROM doctors
-                    ORDER BY id DESC
-                    LIMIT 1;
-                    """
-                )
-                row = CURSOR.fetchone()
-                return cls(row[1], row[2], row[3], row[0])
+            doc = cls(row[1], row[2], row[3], row[0])
+            cls.all[doc.id] = doc
+            return doc
         except Exception as e:
             print("Error fetching doctor from db:", e)
 
@@ -228,6 +232,8 @@ class Doctor:
                 self.id = CURSOR.lastrowid
                 type(self).all[self.id] = self
                 return self
+        except IntegrityError as e:
+            print("Full names must be provided")
         except Exception as e:
             print("Error saving doctor:", e)
 
@@ -268,17 +274,35 @@ class Doctor:
 
     #! Exercises
     @classmethod
-    def doctor_with_most_patients(cls):
-        pass
-    
+    def doctor_with_most_appointments(cls):
+        CURSOR.execute(
+            """
+            SELECT doctor_id, COUNT(*) as num_appts
+            FROM appointments
+            GROUP BY doctor_id
+            ORDER BY num_appts DESC
+            LIMIT 1
+        """
+        )
+        doctor_id = CURSOR.fetchone()[0]
+        return Doctor.find_by("id", doctor_id)
+
     @classmethod
-    def average_patient_count_per_doctor(cls):
-        pass
-    
+    def average_appt_count_per_doctor(cls):
+        CURSOR.execute(
+            """
+            SELECT AVG(appt_count) FROM (
+                SELECT COUNT(*) as appt_count FROM appointments
+                GROUP BY doctor_id
+            );
+        """
+        )
+        return CURSOR.fetchone()[0]
+
     @classmethod
     def total_doctor_count(cls):
-        pass
-    
-    @classmethod
-    def doctor_with_most_patients(cls):
-        pass
+        # return len(cls.get_all())
+        CURSOR.execute("""
+            SELECT COUNT(*) FROM doctors;
+        """)
+        return CURSOR.fetchone()[0]

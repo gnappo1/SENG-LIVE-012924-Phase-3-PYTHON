@@ -97,7 +97,6 @@ class Appointment:
             self._description = description
 
     #! Association Methods
-
     def doctor(self):
         from classes.doctor import Doctor
         return Doctor.find_by_id(self.doctor_id) if self.doctor_id else None
@@ -132,8 +131,10 @@ class Appointment:
                         date TEXT,
                         time TEXT,
                         description TEXT,
-                        doctor_id INTEGER,
-                        patient_id INTEGER
+                        doctor_id INTEGER CHECK(doctor_id > 0),
+                        patient_id INTEGER,
+                        FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE cascade,
+                        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE cascade
                     );
                 """
                 )

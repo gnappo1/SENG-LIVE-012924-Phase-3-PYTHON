@@ -16,15 +16,15 @@ def setup_db():
 
     # Create seed data
     doctor_1 = Doctor.create("Dr Bob", "123-456-7890", "Allergy and immunology")
-    doctor_2 = Doctor.create("Dr Alice", "123-456-7890", "Anesthesiology")
-    doctor_3 = Doctor.create("Dr Carol", "123-456-7890", "Dermatology")
-    doctor_4 = Doctor.create("Dr Dave", "123-456-7890", "Diagnostic radiology")
+    doctor_2 = Doctor.create("Dr Alice", "123-456-7891", "Anesthesiology")
+    doctor_3 = Doctor.create("Dr Carol", "123-456-7892", "Dermatology")
+    doctor_4 = Doctor.create("Dr Dave", "123-456-7893", "Diagnostic radiology")
 
     patient_1 = Patient.create("Alice Smith", "alice@gmail.com", "123-456-7890")
-    patient_2 = Patient.create("Bob Jones", "bob@gmail.com", "123-456-7890")
-    patient_3 = Patient.create("Carol Spellman", "carol@gmail.com", "123-456-7890")
-    patient_4 = Patient.create("Dave Montgomery", "dave@gmail.com", "123-456-7890")
-    patient_5 = Patient.create("Eve Sullivan", "eve@gmail.com", "123-456-7890")
+    patient_2 = Patient.create("Bob Jones", "bob@gmail.com", "123-456-7891")
+    patient_3 = Patient.create("Carol Spellman", "carol@gmail.com", "123-456-7892")
+    patient_4 = Patient.create("Dave Montgomery", "dave@gmail.com", "123-456-7893")
+    patient_5 = Patient.create("Eve Sullivan", "eve@gmail.com", "123-456-7894")
 
     Appointment.create("01/01/2021", "01:00PM", "Checkup", doctor_1.id, patient_1.id)
     Appointment.create("01/02/2021", "02:00PM", "Checkup", doctor_2.id, patient_2.id)

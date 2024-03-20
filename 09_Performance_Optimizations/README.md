@@ -8,8 +8,8 @@
     - CHECK
     - INDEX
 
-- Cascading Deletions
-- 
+- Cascading Deletions and Referential Integrity
+
 - Performance Optimizations with Specific Queries
     - MIN/MAX
     - AVERAGE

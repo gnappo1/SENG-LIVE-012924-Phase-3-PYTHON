@@ -130,20 +130,13 @@ class Patient:
             print("Error creating patient:", e)
 
     @classmethod
-    def new_from_db(cls):
+    def new_from_db(cls, row):
         try:
-            with CONN:
-                CURSOR.execute(
-                    """
-                    SELECT * FROM patients
-                    ORDER BY id DESC
-                    LIMIT 1;
-                    """
-                )
-                row = CURSOR.fetchone()
-                return cls(row[1], row[2], row[3], row[0]) if row else None
+            patient = cls(row[1], row[2], row[3], row[0])
+            cls.all[patient.id] = patient
+            return patient
         except Exception as e:
-            print("Error fetching patient from db:", e)
+            print("Error creating patient instance from row:", e)
 
     @classmethod
     def get_all(cls):
@@ -271,7 +264,7 @@ class Patient:
             print("Error deleting patient:", e)
 
     #! Exercises
-    
+
     def total_appointments_for_patient(self):
         pass
 
