@@ -126,20 +126,13 @@ class Doctor:
             print("Error creating doctor:", e)
 
     @classmethod
-    def new_from_db(cls):
+    def new_from_db(cls, row):
         try:
-            with CONN:
-                CURSOR.execute(
-                    """
-                    SELECT * FROM doctors
-                    ORDER BY id DESC
-                    LIMIT 1;
-                    """
-                )
-                row = CURSOR.fetchone()
-                return cls(row[1], row[2], row[3], row[0])
+            doctor = cls(row[1], row[2], row[3], row[0])
+            cls.all[doctor.id] = doctor
+            return doctor
         except Exception as e:
-            print("Error fetching doctor from db:", e)
+            print("Error creating doctor instance from row:", e)
 
     @classmethod
     def get_all(cls):
@@ -270,15 +263,15 @@ class Doctor:
     @classmethod
     def doctor_with_most_patients(cls):
         pass
-    
+
     @classmethod
     def average_patient_count_per_doctor(cls):
         pass
-    
+
     @classmethod
     def total_doctor_count(cls):
         pass
-    
+
     @classmethod
     def doctor_with_most_patients(cls):
         pass
